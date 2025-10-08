@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tienda · Estamparteya</title>
+  <style>
+    :root{ --bg:#0f1115; --surface:#141822; --surface-2:#0c0f14; --text:#e8ecf1; --muted:#9aa3b2; --brand:#31c48d; --radius:18px; }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1200px;margin-inline:auto;padding:18px}
+    header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--surface-2),rgba(20,24,34,.8));backdrop-filter:saturate(1.2) blur(10px);border-bottom:1px solid rgba(255,255,255,.06)}
+    .brand{display:flex;gap:12px;align-items:center;padding:14px 18px}
+    .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#31c48d,#8b5cf6);display:grid;place-items:center;font-weight:900}
+    .brand h1{font-size:18px;margin:0}
+    .top-actions{margin-left:auto;display:flex;gap:12px;align-items:center}
+    .top-actions a{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+    .top-actions a:hover{background:rgba(255,255,255,.12)}
+
+    /* Cuadrícula: 4 por fila en desktop */
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media(max-width:992px){.grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:400px){.grid{grid-template-columns:1fr}}
+
+    .card{background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);overflow:hidden}
+    .thumb{position:relative;aspect-ratio:3/4;background:#0a0c11;display:grid;place-items:center}
+    .thumb img{max-width:90%;max-height:90%;object-fit:contain}
+    .content{padding:12px}
+    .title{font-size:14px;margin:0 0 6px;text-align:center}
+    .price{font-weight:800;text-align:center;margin-bottom:8px}
+    .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:6px 0}
+    .row label{font-size:12px;color:var(--muted)}
+    select, input[type="number"]{background:rgba(255,255,255,.04);color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px 8px}
+    .colors{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+    .swatch{width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.3);cursor:pointer;outline:2px solid transparent;outline-offset:2px}
+    .swatch[aria-selected="true"]{outline-color:var(--brand)}
+    .buy{display:flex;gap:8px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.08);text-decoration:none;cursor:pointer}
+    .btn.whatsapp{background:linear-gradient(135deg,#25D366,#1ebe57);color:#081e10;font-weight:700}
+    .btn.envio{background:linear-gradient(135deg,#009ee3,#007bbd);color:#fff;font-weight:700}
+
+    /* Formulario de envío dentro de la tarjeta (oculto por defecto) */
+    .shipping-form{display:none;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;margin-top:6px}
+    .shipping-form .field{display:flex;gap:6px;align-items:center;margin:6px 0}
+    .shipping-form label{width:110px;font-size:12px;color:var(--muted)}
+    .shipping-form input{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 8px;color:var(--text)}
+    .shipping-form .save{margin-top:6px;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:#2a7a3b;color:#fff;cursor:pointer;font-weight:700}
+    .shipping-note{font-size:12px;color:var(--muted);margin-top:4px;text-align:center}
+  </style>
+</head>
+<body>
+    <!-- Modal "Cómo comprar" -->
+<div id="howto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:2000;display:flex;align-items:center;justify-content:center;">
+    <div style="background:#141822;color:#e8ecf1;padding:20px;max-width:400px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.6);text-align:center;">
+      <h2 style="margin-top:0;font-size:20px;">Cómo comprar</h2>
+      <p style="font-size:14px;line-height:1.5;text-align:left;">
+        1. Elegí el diseño, color y talle.<br>
+        2. Si querés envío, completá el formulario en el botón "Envío".<br>
+        3. Tocá "Comprar por WhatsApp" y nos llega toda la info.
+      </p>
+      <button id="howto-close" style="margin-top:15px;padding:8px 14px;background:#31c48d;color:#081e10;font-weight:bold;border:none;border-radius:8px;cursor:pointer;">
+        Entendido
+      </button>
+    </div>
+  </div>
+  
+
+<!-- ========== LIGHTBOX PARA VER IMÁGENES (clic en la foto) ========== -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;align-items:center;justify-content:center;flex-direction:column;">
+  <span id="closeLightbox" style="position:absolute;top:20px;right:30px;font-size:30px;color:white;cursor:pointer;">✖</span>
+  <img id="lightboxImg" src="" alt="Vista ampliada" style="max-width:90%;max-height:80%;border-radius:10px;">
+  <div style="margin-top:10px;color:#fff;font-size:14px;" id="lightboxCaption"></div>
+  <!-- Flechas -->
+  <span id="prevImg" style="position:absolute;left:30px;top:50%;font-size:40px;color:white;cursor:pointer;">❮</span>
+  <span id="nextImg" style="position:absolute;right:30px;top:50%;font-size:40px;color:white;cursor:pointer;">❯</span>
+</div>
+
+<script>
+  // ===========================
+  // Lightbox con galería
+  // ===========================
+  let gallery = [];
+  let currentIndex = 0;
+  const lightbox    = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const caption     = document.getElementById('lightboxCaption');
+  const closeBtn    = document.getElementById('closeLightbox');
+  const prevBtn     = document.getElementById('prevImg');
+  const nextBtn     = document.getElementById('nextImg');
+
+  document.addEventListener('click',(e)=>{
+    const img = e.target.closest('.thumb img');
+    if(!img) return;
+    const card = img.closest('.product');
+    if(!card) return;
+
+    gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
+    currentIndex = gallery.findIndex(p=>img.getAttribute('src').includes(p.split('/').pop()));
+    if(currentIndex < 0) currentIndex = 0;
+
+    showImage();
+    lightbox.style.display = 'flex';
+  });
+
+  function showImage(){
+    if(!gallery.length) return;
+    lightboxImg.src = gallery[currentIndex];
+    caption.textContent = `Imagen ${currentIndex+1} de ${gallery.length}`;
+  }
+  closeBtn.onclick = ()=> lightbox.style.display='none';
+  prevBtn.onclick  = ()=>{ currentIndex = (currentIndex - 1 + gallery.length) % gallery.length; showImage(); };
+  nextBtn.onclick  = ()=>{ currentIndex = (currentIndex + 1) % gallery.length; showImage(); };
+  lightbox.addEventListener('click',(e)=>{ if(e.target===lightbox) lightbox.style.display='none'; });
+</script>
+
+<!-- ===== Header con iconos ===== -->
+<header>
+  <div class="container brand">
+    <div class="logo">EY</div>
+    <h1>Tienda de Remeras</h1>
+    <div class="top-actions">
+      <!-- WhatsApp -->
+      <a href="https://wa.me/541135656576" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path fill="#25D366" d="M20.52 3.48A11.93 11.93 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.16 1.6 5.98L0 24l6.18-1.62A11.93 11.93 0 0012 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.18-3.48-8.52zM12 22a9.93 9.93 0 01-5.06-1.36l-.36-.21-3.67.96.98-3.58-.23-.37A9.93 9.93 0 012 12c0-5.52 4.48-10 10-10s10 4.48 10 10-4.48 10-10 10z"/><path fill="#25D366" d="M17.52 14.35c-.29-.15-1.71-.85-1.97-.94-.27-.1-.47-.15-.67.15-.2.29-.77.94-.95 1.14-.18.2-.35.22-.64.07-.29-.15-1.24-.46-2.37-1.46-.88-.78-1.48-1.74-1.65-2.03-.18-.29-.02-.45.13-.6.13-.13.29-.35.44-.52.15-.18.2-.29.29-.49.1-.2.05-.37-.03-.52-.08-.15-.67-1.61-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.29-1.05 1.02-1.05 2.48s1.08 2.87 1.23 3.07c.15.2 2.12 3.24 5.14 4.54.72.31 1.28.49 1.72.63.72.23 1.37.2 1.88.12.58-.09 1.71-.7 1.95-1.38.24-.67.24-1.24.17-1.37-.06-.13-.27-.2-.55-.34z"/>
+        </svg>
+      </a>
+      <!-- Instagram -->
+      <a href="https://www.instagram.com/estamparteya.ar" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="#fff" stroke-width="2"/>
+          <circle cx="12" cy="12" r="4.5" fill="none" stroke="#fff" stroke-width="2"/>
+          <circle cx="17" cy="7" r="1.5" fill="#fff"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="grid" id="catalogo">
+
+    <!-- ====== PRODUCTO 1 ====== -->
+    <article class="card product"
+      data-title="Remera 1"
+      data-price="14999"
+      data-sku="REM-001"
+      data-gallery="img/remera1-blanco.png|img/remera1-negro.png|img/remera1-beige.png|img/remera1-talles.png">
+      <div class="thumb">
+        <img src="img/remera1-blanco.png" alt="Remera 1">
+      </div>
+      <div class="content">
+        <h3 class="title">Remera 1</h3>
+        <div class="price">$14.999</div>
+
+        <!-- Colores -->
+        <div class="row">
+          <label>Colores:</label>
+          <div class="colors" role="listbox" aria-label="Elegir color">
+            <button class="swatch" title="Blanco" data-color="blanco" style="background:#ffffff"></button>
+            <button class="swatch" title="Negro"  data-color="negro"  style="background:#111111"></button>
+            <button class="swatch" title="Beige"  data-color="beige"  style="background:#d9c8a6"></button>
+          </div>
+        </div>
+
+        <!-- Talle + Cantidad -->
+        <div class="row">
+          <label>Talle:</label>
+          <select class="size">
+            <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+          </select>
+          <label>Cant.:</label>
+          <input class="qty" type="number" min="1" value="1" style="width:70px">
+        </div>
+
+        <!-- ========== BOTONES: ENVÍO (abre formulario) + WHATSAPP ========== -->
+        <div class="buy">
+          <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
+          <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar por WhatsApp</a>
+        </div>
+
+        <!-- ========== FORMULARIO DE ENVÍO (oculto) ========== -->
+        <div class="shipping-form" aria-hidden="true">
+          <div class="field">
+            <label>Nombre completo</label>
+            <input type="text" class="ship-name" placeholder="Ej: Juan Pérez">
+          </div>
+          <div class="field">
+            <label>Localidad</label>
+            <input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires">
+          </div>
+          <div class="field">
+            <label>Dirección</label>
+            <input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica">
+          </div>
+          <div class="field">
+            <label>Teléfono</label>
+            <input type="tel" class="ship-telefono" placeholder="11 3565 6576">
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" class="ship-email" placeholder="tu@correo.com">
+          </div>
+          <button type="button" class="save">Guardar</button>
+          <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ====== PRODUCTO 2 ====== -->
+    <article class="card product"
+      data-title="Remera 2"
+      data-price="14999"
+      data-sku="REM-002"
+      data-gallery="img/remera2-blanco.png|img/remera2-negro.png|img/talleremera2.png">
+      <div class="thumb">
+        <img src="img/remera2-blanco.png" alt="Remera 2">
+      </div>
+      <div class="content">
+        <h3 class="title">Remera 2</h3>
+        <div class="price">$14.999</div>
+
+        <div class="row">
+          <label>Colores:</label>
+          <div class="colors" role="listbox" aria-label="Elegir color">
+            <button class="swatch" title="Blanco" data-color="blanco" style="background:#ffffff"></button>
+            <button class="swatch" title="Negro"  data-color="negro"  style="background:#111111"></button>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>Talle:</label>
+          <select class="size">
+            <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+          </select>
+          <label>Cant.:</label>
+          <input class="qty" type="number" min="1" value="1" style="width:70px">
+        </div>
+
+        <div class="buy">
+          <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
+          <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar por WhatsApp</a>
+        </div>
+
+        <div class="shipping-form" aria-hidden="true">
+          <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+          <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+          <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+          <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+          <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
+          <button type="button" class="save">Guardar</button>
+          <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ====== PRODUCTO 3 ====== -->
+    <article class="card product"
+      data-title="Remera 3"
+      data-price="14999"
+      data-sku="REM-003"
+      data-gallery="img/remera3-negra.png|img/talleremera3.png">
+      <div class="thumb">
+        <img src="img/remera3-negra.png" alt="Remera 3">
+      </div>
+      <div class="content">
+        <h3 class="title">Remera 3</h3>
+        <div class="price">$14.999</div>
+
+        <div class="row">
+          <label>Colores:</label>
+          <div class="colors" role="listbox" aria-label="Elegir color">
+            <!-- archivo es remera3-NEGRA.png -> data-color debe ser 'negra' -->
+            <button class="swatch" title="Negro" data-color="negra" style="background:#111111"></button>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>Talle:</label>
+          <select class="size">
+            <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+          </select>
+          <label>Cant.:</label>
+          <input class="qty" type="number" min="1" value="1" style="width:70px">
+        </div>
+
+        <div class="buy">
+          <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
+          <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar por WhatsApp</a>
+        </div>
+
+        <div class="shipping-form" aria-hidden="true">
+          <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+          <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+          <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+          <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+          <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
+          <button type="button" class="save">Guardar</button>
+          <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
+        </div>
+      </div>
+    </article>
+<!-- ====== PRODUCTO 4 ====== -->
+<article class="card product"
+data-title="Remera 4"
+data-price="14999"
+data-sku="REM-002"
+data-gallery="img/remera4-blanca.png|img/remera4-negra.png|img/talleremera4.png">
+<div class="thumb">
+  <img src="img/remera4-blanca.png" alt="Remera 4">
+</div>
+<div class="content">
+  <h3 class="title">Remera 4</h3>
+  <div class="price">$14.999</div>
+
+  <div class="row">
+    <label>Colores:</label>
+    <div class="colors" role="listbox" aria-label="Elegir color">
+      <button class="swatch" title="Blanco" data-color="blanco" style="background:#ffffff"></button>
+      <button class="swatch" title="Negra"  data-color="negra"  style="background:#111111"></button>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>Talle:</label>
+    <select class="size">
+      <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+    </select>
+    <label>Cant.:</label>
+    <input class="qty" type="number" min="1" value="1" style="width:70px">
+  </div>
+
+  <div class="buy">
+    <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
+    <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar por WhatsApp</a>
+  </div>
+
+  <div class="shipping-form" aria-hidden="true">
+    <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+    <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+    <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+    <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+    <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
+    <button type="button" class="save">Guardar</button>
+    <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
+  </div>
+</div>
+</article>
+
+  </section>
+</main>
+
+<!-- Script: swatches + envío + WhatsApp -->
+<script>
+  // ======= CONFIG =======
+  const PHONE    = "541135656576";        // +54 11 3565 6576
+  const GREETING = "Quiero esta remera";  // Texto inicial
+  const $$ = (s, c=document)=>[...c.querySelectorAll(s)];
+
+  // 1) Seleccionar primer color por defecto y actualizar miniatura
+  window.addEventListener('DOMContentLoaded', ()=>{
+    $$('.product').forEach(card=>{
+      const first = card.querySelector('.swatch');
+      if(first && !card.querySelector('.swatch[aria-selected="true"]')){
+        first.setAttribute('aria-selected','true');
+        const color = (first.dataset.color||'').toLowerCase();
+        const gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
+        const match = gallery.find(p=>p.toLowerCase().includes(color));
+        const thumb = card.querySelector('.thumb img');
+        if(match && thumb) thumb.src = match;
+      }
+    });
+  });
+
+  // 2) Cambiar miniatura al hacer click en un color
+  document.addEventListener('click', (e)=>{
+    const sw = e.target.closest('.swatch');
+    if(!sw) return;
+    const card = sw.closest('.product');
+    if(!card) return;
+
+    $$('.swatch', card).forEach(b=>b.removeAttribute('aria-selected'));
+    sw.setAttribute('aria-selected','true');
+
+    const color = (sw.dataset.color||'').toLowerCase();
+    const gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
+    const match = gallery.find(p=>p.toLowerCase().includes(color));
+    const thumb = card.querySelector('.thumb img');
+    if(match && thumb) thumb.src = match;
+  });
+
+  // 3) Botón "Envío": abre/cierra formulario dentro de la tarjeta
+  document.addEventListener('click', (e)=>{
+    const toggle = e.target.closest('.product .envio');
+    if(!toggle) return;
+    e.preventDefault();
+    const card = toggle.closest('.product');
+    const form = card.querySelector('.shipping-form');
+    if(!form) return;
+    const visible = form.style.display === 'block';
+    form.style.display = visible ? 'none' : 'block';
+    form.setAttribute('aria-hidden', visible ? 'true' : 'false');
+  });
+
+  // 4) Botón "Guardar" del formulario: guardamos en dataset del producto
+  document.addEventListener('click', (e)=>{
+    const saveBtn = e.target.closest('.product .shipping-form .save');
+    if(!saveBtn) return;
+    const card = saveBtn.closest('.product');
+    const get = sel => card.querySelector(sel)?.value?.trim() || '';
+
+    // Guardamos en data-* del artículo
+    card.dataset.shipName      = get('.ship-name');
+    card.dataset.shipLocalidad = get('.ship-localidad');
+    card.dataset.shipDireccion = get('.ship-direccion');
+    card.dataset.shipTelefono  = get('.ship-telefono');
+    card.dataset.shipEmail     = get('.ship-email');
+
+    // Feedback rápido (sin alert)
+    saveBtn.textContent = '¡Guardado!';
+    setTimeout(()=>{ saveBtn.textContent = 'Guardar'; }, 1200);
+  });
+
+  // 5) Botón WhatsApp por tarjeta (incluye datos de envío si existen)
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.product .whatsapp');
+    if(!btn) return;
+    e.preventDefault();
+
+    const card = btn.closest('.product');
+    const title = card.dataset.title || card.querySelector('.title')?.textContent?.trim() || 'Remera';
+    const raw   = card.dataset.price || card.querySelector('.price')?.textContent || '';
+    const price = (raw.match(/\d+/g)||[]).join('');
+    const size  = card.querySelector('.size')?.value || '';
+    const qty   = card.querySelector('.qty')?.value || '1';
+    const sel   = card.querySelector('.swatch[aria-selected="true"]');
+    const color = sel ? sel.dataset.color : '';
+    const img   = card.querySelector('.thumb img')?.getAttribute('src') || '';
+
+    // Datos de envío (si guardaste con "Guardar")
+    const shipName      = card.dataset.shipName      || '';
+    const shipLocalidad = card.dataset.shipLocalidad || '';
+    const shipDireccion = card.dataset.shipDireccion || '';
+    const shipTelefono  = card.dataset.shipTelefono  || '';
+    const shipEmail     = card.dataset.shipEmail     || '';
+
+    const parts = [
+      `${GREETING}: ${title}`,
+      color ? `Color: ${color}` : null,
+      size  ? `Talle: ${size}`  : null,
+      qty   ? `Cantidad: ${qty}`: null,
+      price ? `Precio publicado: $${Number(price).toLocaleString('es-AR')}` : null,
+      img   ? `Imagen: ${location.origin + location.pathname.replace(/[^/]*$/,'') + img}` : null,
+      // Bloque de envío (solo si hay al menos un dato cargado)
+      (shipName || shipLocalidad || shipDireccion || shipTelefono || shipEmail) ? '— Datos de envío —' : null,
+      shipName      ? `Nombre: ${shipName}` : null,
+      shipLocalidad ? `Localidad: ${shipLocalidad}` : null,
+      shipDireccion ? `Dirección: ${shipDireccion}` : null,
+      shipTelefono  ? `Teléfono: ${shipTelefono}` : null,
+      shipEmail     ? `Email: ${shipEmail}` : null,
+    ].filter(Boolean).join('%0A');
+
+    const url = `https://wa.me/${PHONE}?text=${parts}`;
+    try { window.open(url,'_blank'); } catch(_) { location.href = url; }
+  });
+</script>
+
+<!-- Script: hover visual en miniaturas (sin CSS externo) -->
+<script>
+  (function(){
+    function enhance(img){
+      img.style.cursor = 'pointer';
+      img.style.transition = 'transform .2s, filter .2s';
+      img.addEventListener('mouseenter', ()=>{
+        img.style.transform = 'scale(1.05)';
+        img.style.filter = 'brightness(1.1)';
+        if (img.parentElement) {
+          img.parentElement.style.outline = '2px solid rgba(255,255,255,.2)';
+          img.parentElement.style.outlineOffset = '-4px';
+        }
+      });
+      img.addEventListener('mouseleave', ()=>{
+        img.style.transform = '';
+        img.style.filter = '';
+        if (img.parentElement) {
+          img.parentElement.style.outline = '';
+          img.parentElement.style.outlineOffset = '';
+        }
+      });
+    }
+    document.querySelectorAll('.thumb img').forEach(enhance);
+    const obs = new MutationObserver(()=> {
+      document.querySelectorAll('.thumb img').forEach(img => {
+        if (!img.dataset._hoverReady) {
+          enhance(img);
+          img.dataset._hoverReady = '1';
+        }
+      });
+    });
+    obs.observe(document.body, { childList:true, subtree:true });
+  })();
+</script>
+<script>
+    (function(){
+      const modal  = document.getElementById('howto');
+      const closeB = document.getElementById('howto-close');
+  
+      // Mostrar cartel apenas entra a la página
+      window.addEventListener('load', ()=>{
+        modal.style.display = 'flex';
+      });
+  
+      // Botón cerrar
+      closeB.addEventListener('click', ()=>{
+        modal.style.display = 'none';
+      });
+    })();
+  </script>
+  
+</body>
+</html>
