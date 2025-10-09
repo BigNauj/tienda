@@ -5,11 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tienda · Estamparteya</title>
 
-  <!-- =========================
-       ESTILOS BÁSICOS DEL SITIO
-       - Colores, tipografías y layout.
-       - Podés ajustar variables en :root (tema oscuro).
-     ========================= -->
   <style>
     :root{ --bg:#0f1115; --surface:#141822; --surface-2:#0c0f14; --text:#e8ecf1; --muted:#9aa3b2; --brand:#31c48d; --radius:18px; }
     *{box-sizing:border-box}
@@ -24,13 +19,11 @@
     .top-actions a{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
     .top-actions a:hover{background:rgba(255,255,255,.12)}
 
-    /* Grilla de productos (4 en desktop, 3 tablet, 2 móvil) */
     .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
     @media(max-width:992px){.grid{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:400px){.grid{grid-template-columns:1fr}}
 
-    /* Tarjetas de producto */
     .card{background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);overflow:hidden}
     .thumb{position:relative;aspect-ratio:3/4;background:#0a0c11;display:grid;place-items:center}
     .thumb img{max-width:90%;max-height:90%;object-fit:contain}
@@ -41,18 +34,15 @@
     .row label{font-size:12px;color:var(--muted)}
     select, input[type="number"]{background:rgba(255,255,255,.04);color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px 8px}
 
-    /* Swatches de color/video */
     .colors{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
     .swatch{width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.3);cursor:pointer;outline:2px solid transparent;outline-offset:2px}
     .swatch[aria-selected="true"]{outline-color:var(--brand)}
 
-    /* Botones de acción */
     .buy{display:flex;gap:8px;justify-content:center;margin-top:6px;flex-wrap:wrap}
     .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.08);text-decoration:none;cursor:pointer}
     .btn.whatsapp{background:linear-gradient(135deg,#25D366,#1ebe57);color:#081e10;font-weight:700}
     .btn.envio{background:linear-gradient(135deg,#009ee3,#007bbd);color:#fff;font-weight:700}
 
-    /* Formulario de envío (se despliega dentro de la tarjeta) */
     .shipping-form{display:none;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;margin-top:6px}
     .shipping-form .field{display:flex;gap:6px;align-items:center;margin:6px 0}
     .shipping-form label{width:110px;font-size:12px;color:var(--muted)}
@@ -62,11 +52,7 @@
   </style>
 </head>
 <body>
-  <!-- =========================
-       MODAL "CÓMO COMPRAR"
-       - Se muestra al cargar la página.
-       - Podés ocultarlo sacando el script de abajo.
-     ========================= -->
+  <!-- Modal "Cómo comprar" -->
   <div id="howto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:2000;display:flex;align-items:center;justify-content:center;">
     <div style="background:#141822;color:#e8ecf1;padding:20px;max-width:400px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.6);text-align:center;">
       <h2 style="margin-top:0;font-size:20px;">Cómo comprar</h2>
@@ -81,11 +67,7 @@
     </div>
   </div>
 
-  <!-- =========================
-       LIGHTBOX (AMPLIAR IMÁGENES)
-       - Hoy abre solo imágenes (no video).
-       - Si querés agregar video al lightbox, te paso luego el bloque.
-     ========================= -->
+  <!-- Lightbox (sólo imágenes) -->
   <div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;align-items:center;justify-content:center;flex-direction:column;">
     <span id="closeLightbox" style="position:absolute;top:20px;right:30px;font-size:30px;color:white;cursor:pointer;">✖</span>
     <img id="lightboxImg" src="" alt="Vista ampliada" style="max-width:90%;max-height:80%;border-radius:10px;">
@@ -95,11 +77,7 @@
   </div>
 
   <script>
-    // ===========================
-    // JS: LÓGICA DEL LIGHTBOX (IMÁGENES)
-    // - Busca la galería del producto (data-gallery)
-    // - Abre al clickear la imagen del thumb
-    // ===========================
+    // Lightbox (abre al clickear la imagen del producto)
     let gallery = [];
     let currentIndex = 0;
     const lightbox    = document.getElementById('lightbox');
@@ -115,7 +93,6 @@
       const card = img.closest('.product');
       if(!card) return;
 
-      // Armamos la galería desde el data-gallery del artículo
       gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
       currentIndex = gallery.findIndex(p=>img.getAttribute('src').includes(p.split('/').pop()));
       if(currentIndex < 0) currentIndex = 0;
@@ -135,21 +112,17 @@
     lightbox.addEventListener('click',(e)=>{ if(e.target===lightbox) lightbox.style.display='none'; });
   </script>
 
-  <!-- =========================
-       HEADER (LOGO + REDES)
-     ========================= -->
+  <!-- Header -->
   <header>
     <div class="container brand">
       <div class="logo">EY</div>
       <h1>Tienda de Remeras</h1>
       <div class="top-actions">
-        <!-- WhatsApp -->
         <a href="https://wa.me/541135656576" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
             <path fill="#25D366" d="M20.52 3.48A11.93 11.93 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.16 1.6 5.98L0 24l6.18-1.62A11.93 11.93 0 0012 24c6.63 0 12-5.37 12-12 0-3.19-1.24-6.18-3.48-8.52zM12 22a9.93 9.93 0 01-5.06-1.36l-.36-.21-3.67.96.98-3.58-.23-.37A9.93 9.93 0 012 12c0-5.52 4.48-10 10-10s10 4.48 10 10-4.48 10-10 10z"/><path fill="#25D366" d="M17.52 14.35c-.29-.15-1.71-.85-1.97-.94-.27-.1-.47-.15-.67.15-.2.29-.77.94-.95 1.14-.18.2-.35.22-.64.07-.29-.15-1.24-.46-2.37-1.46-.88-.78-1.48-1.74-1.65-2.03-.18-.29-.02-.45.13-.6.13-.13.29-.35.44-.52.15-.18.2-.29.29-.49.1-.2.05-.37-.03-.52-.08-.15-.67-1.61-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.29-1.05 1.02-1.05 2.48s1.08 2.87 1.23 3.07c.15.2 2.12 3.24 5.14 4.54.72.31 1.28.49 1.72.63.72.23 1.37.2 1.88.12.58-.09 1.71-.7 1.95-1.38.24-.67.24-1.24.17-1.37-.06-.13-.27-.2-.55-.34z"/>
           </svg>
         </a>
-        <!-- Instagram -->
         <a href="https://www.instagram.com/estamparteya.ar" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
             <rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="#fff" stroke-width="2"/>
@@ -161,35 +134,22 @@
     </div>
   </header>
 
-  <!-- =========================
-       CATÁLOGO DE PRODUCTOS
-       - Cada <article.product> es una remera.
-       - data-gallery: lista de imágenes del lightbox separadas por |
-     ========================= -->
+  <!-- Catálogo -->
   <main class="container">
     <section class="grid" id="catalogo">
 
-      <!-- ====== PRODUCTO 1 ====== -->
-      <!-- DONDE MODIFICAR:
-           - data-gallery: imágenes del lightbox
-           - <img src="...">: imagen inicial del thumb
-           - <source src="media/remera1video.mp4">: RUTA DEL VIDEO
-           - swatches: colores y el botón de Video
-      -->
+      <!-- ====== PRODUCTO 1 (con VIDEO) ====== -->
       <article class="card product"
         data-title="Remera 1"
         data-price="14999"
         data-sku="REM-001"
         data-gallery="img/remera1-blanco.png|img/remera1-negro.png|img/remera1-beige.png|img/remera1-talles.png">
         <div class="thumb">
-          <!-- Imagen mostrada por defecto -->
           <img src="img/remera1-blanco.png" alt="Remera 1">
-
-          <!-- VIDEO que se muestra al elegir el swatch "Video" -->
+          <!-- Video oculto por defecto -->
           <video class="thumb-video" controls playsinline preload="metadata"
                  style="max-width:90%;max-height:90%;display:none;"
                  poster="img/remera1-blanco.png">
-            <!-- ❗ Cambiá esta ruta si tu video tiene otro nombre/carpeta -->
             <source src="media/remera1video.mp4" type="video/mp4">
           </video>
         </div>
@@ -198,22 +158,18 @@
           <h3 class="title">Remera 1</h3>
           <div class="price">$14.999</div>
 
-          <!-- Selector de colores + botón de VIDEO -->
+          <!-- Colores (con data-image) y Video al final -->
           <div class="row">
             <label>Colores:</label>
             <div class="colors" role="listbox" aria-label="Elegir color">
-              <!-- ❗ Este botón muestra el VIDEO en el marco -->
+              <button class="swatch" title="Blanco" data-color="blanco" data-image="img/remera1-blanco.png" style="background:#ffffff"></button>
+              <button class="swatch" title="Negro"  data-color="negro"  data-image="img/remera1-negro.png"  style="background:#111111"></button>
+              <button class="swatch" title="Beige"  data-color="beige"  data-image="img/remera1-beige.png"  style="background:#d9c8a6"></button>
               <button class="swatch is-video" title="Video" data-video="media/remera1video.mp4"
                       style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
-
-              <!-- Colores (podés agregar/quitar) -->
-              <button class="swatch" title="Blanco" data-color="blanco" style="background:#ffffff"></button>
-              <button class="swatch" title="Negro"  data-color="negro"  style="background:#111111"></button>
-              <button class="swatch" title="Beige"  data-color="beige"  style="background:#d9c8a6"></button>
             </div>
           </div>
 
-          <!-- Talle + Cantidad -->
           <div class="row">
             <label>Talle:</label>
             <select class="size">
@@ -223,13 +179,11 @@
             <input class="qty" type="number" min="1" value="1" style="width:70px">
           </div>
 
-          <!-- Botones -->
           <div class="buy">
             <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
             <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar</a>
           </div>
 
-          <!-- Formulario de envío (los datos se incluyen al mandar WhatsApp) -->
           <div class="shipping-form" aria-hidden="true">
             <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
             <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
@@ -305,7 +259,6 @@
           <div class="row">
             <label>Colores:</label>
             <div class="colors" role="listbox" aria-label="Elegir color">
-              <!-- Ojo: el archivo es remera3-NEGRA.png por eso el data-color es 'negra' -->
               <button class="swatch" title="Negro" data-color="negra" style="background:#111111"></button>
             </div>
           </div>
@@ -386,18 +339,19 @@
     </section>
   </main>
 
-  <!-- =========================
-       JS PRINCIPAL (swatches, envío y WhatsApp)
-       - Si algo visual no responde, revisar acá.
-     ========================= -->
+  <!-- JS principal: swatches (color/video), envío y WhatsApp -->
   <script>
-    // ======= CONFIG GENERAL =======
-    const PHONE    = "541135656576";       // ❗ Teléfono WhatsApp
-    const GREETING = "Quiero esta remera"; // Texto que inicia el mensaje
-    const $$ = (s, c=document)=>[...c.querySelectorAll(s)];
+    const PHONE    = "541135656576";
+    const GREETING = "Quiero esta remera";
 
-    // ===== 1) Selección por defecto: primer COLOR, no video =====
+    // 1) Al cargar: seleccionar SIEMPRE el primer color (no video) + ocultar cualquier video
     window.addEventListener('DOMContentLoaded', ()=>{
+      document.querySelectorAll('.thumb video.thumb-video').forEach(v=>{
+        try{ v.pause(); }catch(_){}
+        v.style.display='none';
+        v.currentTime = 0;
+      });
+
       document.querySelectorAll('.product').forEach(card=>{
         const firstColor = card.querySelector('.swatch:not(.is-video)');
         if(!firstColor) return;
@@ -406,19 +360,27 @@
           firstColor.setAttribute('aria-selected','true');
         }
 
-        // Mostrar imagen del color por defecto y ocultar video
-        const color = (firstColor.dataset.color||'').toLowerCase();
-        const gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
-        const match = color ? gallery.find(p=>p.toLowerCase().includes(color)) : null;
+        const img = card.querySelector('.thumb img');
+        const vid = card.querySelector('.thumb video.thumb-video');
+        if(vid){ try{vid.pause();}catch(_){ } vid.style.display='none'; }
 
-        const img  = card.querySelector('.thumb img');
-        const vid  = card.querySelector('.thumb video.thumb-video');
-        if(vid){ vid.pause(); vid.style.display='none'; }
+        // Preferir la ruta explícita si existe
+        const direct = firstColor.dataset.image;
+        if(direct && img){
+          img.src = direct;
+          img.style.display = 'block';
+          return;
+        }
+
+        // Fallback por color en data-gallery
+        const color   = (firstColor.dataset.color||'').toLowerCase();
+        const gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
+        const match   = color ? gallery.find(p=>p.toLowerCase().includes(color)) : null;
         if(match && img){ img.src = match; img.style.display='block'; }
       });
     });
 
-    // ===== 2) Click en swatches: COLOR o VIDEO (unificado) =====
+    // 2) Click en swatches: si es video -> muestra video; si es color -> cambia imagen
     document.addEventListener('click', (e)=>{
       const sw = e.target.closest('.swatch');
       if(!sw) return;
@@ -426,32 +388,47 @@
       const card = sw.closest('.product');
       if(!card) return;
 
-      // Estado visual de selección
       card.querySelectorAll('.swatch').forEach(b=>b.removeAttribute('aria-selected'));
       sw.setAttribute('aria-selected','true');
 
       const img  = card.querySelector('.thumb img');
       const vid  = card.querySelector('.thumb video.thumb-video');
 
-      // Si es VIDEO: ocultar imagen y mostrar video
       if(sw.classList.contains('is-video')){
         if(img) img.style.display = 'none';
         if(vid){
+          const btnSrc = sw.dataset.video;
+          const source = vid.querySelector('source');
+          if(btnSrc && source && !source.src.endsWith(btnSrc)){
+            source.src = btnSrc;
+            vid.load();
+          }
           vid.style.display = 'block';
-          try { vid.play(); } catch(_) {}
+          try{ vid.play(); }catch(_){}
         }
-        return; // No seguir con lógica de colores
+        return;
       }
 
-      // Si es COLOR: ocultar video y cambiar imagen
-      if(vid){ vid.pause(); vid.style.display='none'; }
+      // Es un color: ocultar video y setear imagen
+      if(vid){ try{vid.pause();}catch(_){ } vid.style.display='none'; }
+
+      const nextImg = sw.dataset.image;
+      if(nextImg && img){
+        img.src = nextImg;
+        img.style.display = 'block';
+        return;
+      }
+
       const color   = (sw.dataset.color||'').toLowerCase();
       const gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
       const match   = color ? gallery.find(p=>p.toLowerCase().includes(color)) : null;
-      if(match && img){ img.src = match; img.style.display = 'block'; }
+      if(match && img){
+        img.src = match;
+        img.style.display = 'block';
+      }
     });
 
-    // ===== 3) Botón "Envío": despliega formulario =====
+    // 3) Botón "Envío": mostrar/ocultar formulario
     document.addEventListener('click', (e)=>{
       const toggle = e.target.closest('.product .envio');
       if(!toggle) return;
@@ -464,7 +441,7 @@
       form.setAttribute('aria-hidden', visible ? 'true' : 'false');
     });
 
-    // ===== 4) Guardar datos de envío dentro del producto =====
+    // 4) Guardar datos de envío dentro del producto
     document.addEventListener('click', (e)=>{
       const saveBtn = e.target.closest('.product .shipping-form .save');
       if(!saveBtn) return;
@@ -479,7 +456,7 @@
       setTimeout(()=>{ saveBtn.textContent = 'Guardar'; }, 1200);
     });
 
-    // ===== 5) Enviar pedido por WhatsApp =====
+    // 5) Enviar por WhatsApp
     document.addEventListener('click', (e)=>{
       const btn = e.target.closest('.product .whatsapp');
       if(!btn) return;
@@ -495,14 +472,12 @@
       const color = sel ? (sel.dataset.color || (sel.classList.contains('is-video') ? 'video' : '')) : '';
       const img   = card.querySelector('.thumb img')?.getAttribute('src') || '';
 
-      // Datos de envío (opcionales)
       const shipName      = card.dataset.shipName      || '';
       const shipLocalidad = card.dataset.shipLocalidad || '';
       const shipDireccion = card.dataset.shipDireccion || '';
       const shipTelefono  = card.dataset.shipTelefono  || '';
       const shipEmail     = card.dataset.shipEmail     || '';
 
-      // Mensaje formateado
       const parts = [
         `${GREETING}: ${title}`,
         color ? `Color: ${color}` : null,
@@ -523,10 +498,7 @@
     });
   </script>
 
-  <!-- =========================
-       EFECTO HOVER EN MINIATURAS
-       - Solo visual; no afecta la lógica.
-     ========================= -->
+  <!-- Efecto hover en imágenes (opcional, visual) -->
   <script>
     (function(){
       function enhance(img){
@@ -562,9 +534,7 @@
     })();
   </script>
 
-  <!-- =========================
-       SCRIPT DEL MODAL "CÓMO COMPRAR"
-     ========================= -->
+  <!-- Modal "Cómo comprar" -->
   <script>
     (function(){
       const modal  = document.getElementById('howto');
@@ -575,3 +545,4 @@
   </script>
 </body>
 </html>
+
