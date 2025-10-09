@@ -150,7 +150,10 @@
       data-gallery="img/remera1-blanco.png|img/remera1-negro.png|img/remera1-beige.png|img/remera1-talles.png">
       <div class="thumb">
         <img src="img/remera1-blanco.png" alt="Remera 1">
+        <!-- Video agregado -->
+        <video src="C:\Users\Juan Y Eli\Downloads\tienda\media\remera1video.mp4" controls playsinline style="max-width:90%;max-height:90%;display:none;" class="thumb-video"></video>
       </div>
+      
       <div class="content">
         <h3 class="title">Remera 1</h3>
         <div class="price">$14.999</div>
@@ -159,7 +162,8 @@
         <div class="row">
           <label>Colores:</label>
           <div class="colors" role="listbox" aria-label="Elegir color">
-            <button class="swatch" title="Blanco" data-color="blanco" style="background:#ffffff"></button>
+            <button class="swatch is-video" title="Video" data-video="media/remera1.mp4" style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
+    <button class="swatch" title="Blanco" data-color="blanco" style="background:#ffffff"></button>
             <button class="swatch" title="Negro"  data-color="negro"  style="background:#111111"></button>
             <button class="swatch" title="Beige"  data-color="beige"  style="background:#d9c8a6"></button>
           </div>
@@ -518,6 +522,27 @@ data-gallery="img/remera4-blanca.png|img/remera4-negra.png|img/talleremera4.png"
       });
     })();
   </script>
-  
+  <script>
+    document.addEventListener('click',(e)=>{
+      const btn = e.target.closest('.swatch.is-video');
+      if(!btn) return;
+      e.preventDefault();
+    
+      const card = btn.closest('.product');
+      if(!card) return;
+    
+      // Ocultar imagen
+      const img = card.querySelector('.thumb img');
+      if(img) img.style.display = 'none';
+    
+      // Mostrar video
+      const vid = card.querySelector('.thumb video.thumb-video');
+      if(vid){
+        vid.style.display = 'block';
+        vid.play();
+      }
+    });
+    </script>
+    
 </body>
 </html>
