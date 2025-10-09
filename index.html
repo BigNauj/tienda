@@ -204,6 +204,13 @@
         data-gallery="img/remera2-blanco.png|img/remera2-negro.png|img/talleremera2.png">
         <div class="thumb">
           <img src="img/remera2-blanco.png" alt="Remera 2">
+          <!-- Video oculto por defecto -->
+          <video class="thumb-video" controls playsinline preload="metadata"
+                 style="max-width:90%;max-height:90%;display:none;"
+                 poster="img/remera1-blanco.png">
+            <source src="media/remera2video.mp4" type="video/mp4">
+          </video>
+        </div>
         </div>
         <div class="content">
           <h3 class="title">Remera 2</h3>
@@ -214,6 +221,12 @@
             <div class="colors" role="listbox" aria-label="Elegir color">
               <button class="swatch" title="Blanco" data-color="blanco" style="background:#ffffff"></button>
               <button class="swatch" title="Negro"  data-color="negro"  style="background:#111111"></button>
+              <button class="swatch is-video" title="Video" data-video="media/remera2video.mp4"
+        style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">
+  ▶
+</button>
+
+    
             </div>
           </div>
 
