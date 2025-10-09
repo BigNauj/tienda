@@ -264,6 +264,12 @@
         data-gallery="img/remera3-negra.png|img/talleremera3.png">
         <div class="thumb">
           <img src="img/remera3-negra.png" alt="Remera 3">
+           <!-- Video oculto por defecto -->
+           <video class="thumb-video" controls playsinline preload="metadata"
+           style="max-width:90%;max-height:90%;display:none;"
+           poster="img/remera1-blanco.png">
+      <source src="media/remera3video.mp4" type="video/mp4">
+    </video>
         </div>
         <div class="content">
           <h3 class="title">Remera 3</h3>
@@ -273,6 +279,8 @@
             <label>Colores:</label>
             <div class="colors" role="listbox" aria-label="Elegir color">
               <button class="swatch" title="Negro" data-color="negra" style="background:#111111"></button>
+              <button class="swatch is-video" title="Video" data-video="media/remera2video.mp4"
+              style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">
             </div>
           </div>
 
