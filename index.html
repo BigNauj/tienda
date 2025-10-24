@@ -4,12 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tienda · Estamparteya</title>
+  <meta name="description" content="Tienda simple de remeras Estamparteya en Lanús Oeste. Elegí diseño, color y talle y comprá por WhatsApp. Envíos locales.">
+  <link rel="icon" href="favicon.png" />
+
+  <!-- Open Graph básico -->
+  <meta property="og:title" content="Tienda · Estamparteya">
+  <meta property="og:description" content="Elegí diseño, color y talle y comprá por WhatsApp.">
+  <meta property="og:image" content="og-image.jpg">
+  <meta property="og:url" content="https://spectacular-cendol-551d9b.netlify.app/">
+  <meta name="theme-color" content="#0f1115">
 
   <style>
     :root{ --bg:#0f1115; --surface:#141822; --surface-2:#0c0f14; --text:#e8ecf1; --muted:#9aa3b2; --brand:#31c48d; --radius:18px; }
     *{box-sizing:border-box}
     html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
     a{color:inherit;text-decoration:none}
+
     .container{max-width:1200px;margin-inline:auto;padding:18px}
     header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--surface-2),rgba(20,24,34,.8));backdrop-filter:saturate(1.2) blur(10px);border-bottom:1px solid rgba(255,255,255,.06)}
     .brand{display:flex;gap:12px;align-items:center;padding:14px 18px}
@@ -26,7 +36,7 @@
 
     .card{background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);overflow:hidden}
     .thumb{position:relative;aspect-ratio:3/4;background:#0a0c11;display:grid;place-items:center}
-    .thumb img{max-width:90%;max-height:90%;object-fit:contain}
+    .thumb img,.thumb video{max-width:90%;max-height:90%;object-fit:contain}
     .content{padding:12px}
     .title{font-size:14px;margin:0 0 6px;text-align:center}
     .price{font-weight:800;text-align:center;margin-bottom:8px}
@@ -49,17 +59,21 @@
     .shipping-form input{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 8px;color:var(--text)}
     .shipping-form .save{margin-top:6px;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:#2a7a3b;color:#fff;cursor:pointer;font-weight:700}
     .shipping-note{font-size:12px;color:var(--muted);margin-top:4px;text-align:center}
+
+    /* Botón flotante WhatsApp */
+    .wa-float{position:fixed;right:16px;bottom:16px;width:54px;height:54px;border-radius:999px;display:grid;place-items:center;background:#25D366;color:#081e10;font-weight:900;border:1px solid rgba(0,0,0,.15);box-shadow:0 6px 22px rgba(0,0,0,.35);z-index:30}
+    .wa-float:hover{filter:brightness(1.05)}
   </style>
 </head>
 <body>
   <!-- Modal "Cómo comprar" -->
   <div id="howto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:2000;display:flex;align-items:center;justify-content:center;">
-    <div style="background:#141822;color:#e8ecf1;padding:20px;max-width:400px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.6);text-align:center;">
+    <div style="background:#141822;color:#e8ecf1;padding:20px;max-width:420px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.6);text-align:center;">
       <h2 style="margin-top:0;font-size:20px;">Cómo comprar</h2>
       <p style="font-size:14px;line-height:1.5;text-align:left;">
         1. Elegí el diseño, color y talle.<br>
-        2. Si querés envío, completá el formulario en el botón "Envío".<br>
-        3. Tocá "Comprar" y nos llega toda la info.
+        2. Si querés envío, completá el formulario con tus datos (queda guardado).<br>
+        3. Tocá "Comprar" y nos llega todo por WhatsApp.
       </p>
       <button id="howto-close" style="margin-top:15px;padding:8px 14px;background:#31c48d;color:#081e10;font-weight:bold;border:none;border-radius:8px;cursor:pointer;">
         Entendido
@@ -67,7 +81,7 @@
     </div>
   </div>
 
-  <!-- Lightbox (sólo imágenes) -->
+  <!-- Lightbox -->
   <div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;align-items:center;justify-content:center;flex-direction:column;">
     <span id="closeLightbox" style="position:absolute;top:20px;right:30px;font-size:30px;color:white;cursor:pointer;">✖</span>
     <img id="lightboxImg" src="" alt="Vista ampliada" style="max-width:90%;max-height:80%;border-radius:10px;">
@@ -76,46 +90,10 @@
     <span id="nextImg" style="position:absolute;right:30px;top:50%;font-size:40px;color:white;cursor:pointer;">❯</span>
   </div>
 
-  <script>
-    // Lightbox (abre al clickear la imagen del producto)
-    let gallery = [];
-    let currentIndex = 0;
-    const lightbox    = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const caption     = document.getElementById('lightboxCaption');
-    const closeBtn    = document.getElementById('closeLightbox');
-    const prevBtn     = document.getElementById('prevImg');
-    const nextBtn     = document.getElementById('nextImg');
-
-    document.addEventListener('click',(e)=>{
-      const img = e.target.closest('.thumb img');
-      if(!img) return;
-      const card = img.closest('.product');
-      if(!card) return;
-
-      gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
-      currentIndex = gallery.findIndex(p=>img.getAttribute('src').includes(p.split('/').pop()));
-      if(currentIndex < 0) currentIndex = 0;
-
-      showImage();
-      lightbox.style.display = 'flex';
-    });
-
-    function showImage(){
-      if(!gallery.length) return;
-      lightboxImg.src = gallery[currentIndex];
-      caption.textContent = `Imagen ${currentIndex+1} de ${gallery.length}`;
-    }
-    closeBtn.onclick = ()=> lightbox.style.display='none';
-    prevBtn.onclick  = ()=>{ currentIndex = (currentIndex - 1 + gallery.length) % gallery.length; showImage(); };
-    nextBtn.onclick  = ()=>{ currentIndex = (currentIndex + 1) % gallery.length; showImage(); };
-    lightbox.addEventListener('click',(e)=>{ if(e.target===lightbox) lightbox.style.display='none'; });
-  </script>
-
   <!-- Header -->
   <header>
     <div class="container brand">
-      <div class="logo">EY</div>
+      <div class="logo" aria-hidden="true">EY</div>
       <h1>Tienda de Remeras</h1>
       <div class="top-actions">
         <a href="https://wa.me/541135656576" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">
@@ -138,17 +116,16 @@
   <main class="container">
     <section class="grid" id="catalogo">
 
-      <!-- ====== PRODUCTO 1 (con VIDEO) ====== -->
+      <!-- ====== PRODUCTO 1 ====== -->
       <article class="card product"
         data-title="Remera 1"
         data-price="14999"
         data-sku="REM-001"
         data-gallery="img/remera1-blanco.png|img/remera1-negro.png|img/remera1-beige.png|img/remera1-talles.png">
         <div class="thumb">
-          <img src="img/remera1-blanco.png" alt="Remera 1">
-          <!-- Video oculto por defecto -->
+          <img src="img/remera1-blanco.png" alt="Remera 1 color blanco" loading="lazy">
           <video class="thumb-video" controls playsinline preload="metadata"
-                 style="max-width:90%;max-height:90%;display:none;"
+                 style="display:none;"
                  poster="img/remera1-blanco.png">
             <source src="media/remera1video.mp4" type="video/mp4">
           </video>
@@ -158,7 +135,6 @@
           <h3 class="title">Remera 1</h3>
           <div class="price">$14.999</div>
 
-          <!-- Colores (con data-image) y Video al final -->
           <div class="row">
             <label>Colores:</label>
             <div class="colors" role="listbox" aria-label="Elegir color">
@@ -172,11 +148,11 @@
 
           <div class="row">
             <label>Talle:</label>
-            <select class="size">
+            <select class="size" aria-label="Talle">
               <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
             </select>
             <label>Cant.:</label>
-            <input class="qty" type="number" min="1" value="1" style="width:70px">
+            <input class="qty" type="number" min="1" value="1" style="width:70px" aria-label="Cantidad">
           </div>
 
           <div class="buy">
@@ -185,33 +161,30 @@
           </div>
 
           <div class="shipping-form" aria-hidden="true">
-            <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
-            <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
-            <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
-            <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
-            <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
+            <div class="field"><label for="s1name">Nombre completo</label><input id="s1name" type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+            <div class="field"><label for="s1loc">Localidad</label><input id="s1loc" type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+            <div class="field"><label for="s1dir">Dirección</label><input id="s1dir" type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+            <div class="field"><label for="s1tel">Teléfono</label><input id="s1tel" type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+            <div class="field"><label for="s1mail">Email</label><input id="s1mail" type="email" class="ship-email" placeholder="tu@correo.com"></div>
             <button type="button" class="save">Guardar</button>
-            <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
+            <div class="shipping-note">Los datos se guardan y se envían con tu pedido.</div>
           </div>
         </div>
       </article>
 
-      <!-- ====== PRODUCTO 2 ====== -->
+      <!-- ====== PRODUCTO 2 (fix divs) ====== -->
       <article class="card product"
         data-title="Remera 2"
         data-price="14999"
         data-sku="REM-002"
         data-gallery="img/remera2-blanco.png|img/remera2-negro.png|img/talleremera2.png">
         <div class="thumb">
-          <img src="img/remera2-blanco.png" alt="Remera 2">
-          <!-- Video oculto por defecto -->
-          <video class="thumb-video" controls playsinline preload="metadata"
-                 style="max-width:90%;max-height:90%;display:none;"
-                 poster="img/remera1-blanco.png">
+          <img src="img/remera2-blanco.png" alt="Remera 2 color blanco" loading="lazy">
+          <video class="thumb-video" controls playsinline preload="metadata" style="display:none;" poster="img/remera2-blanco.png">
             <source src="media/remera2video.mp4" type="video/mp4">
           </video>
         </div>
-        </div>
+
         <div class="content">
           <h3 class="title">Remera 2</h3>
           <div class="price">$14.999</div>
@@ -219,24 +192,20 @@
           <div class="row">
             <label>Colores:</label>
             <div class="colors" role="listbox" aria-label="Elegir color">
-              <button class="swatch" title="Blanco" data-color="blanco" style="background:#ffffff"></button>
-              <button class="swatch" title="Negro"  data-color="negro"  style="background:#111111"></button>
+              <button class="swatch" title="Blanco" data-color="blanco" data-image="img/remera2-blanco.png" style="background:#ffffff"></button>
+              <button class="swatch" title="Negro"  data-color="negro"  data-image="img/remera2-negro.png"  style="background:#111111"></button>
               <button class="swatch is-video" title="Video" data-video="media/remera2video.mp4"
-        style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">
-  ▶
-</button>
-
-    
+                      style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
             </div>
           </div>
 
           <div class="row">
             <label>Talle:</label>
-            <select class="size">
+            <select class="size" aria-label="Talle">
               <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
             </select>
             <label>Cant.:</label>
-            <input class="qty" type="number" min="1" value="1" style="width:70px">
+            <input class="qty" type="number" min="1" value="1" style="width:70px" aria-label="Cantidad">
           </div>
 
           <div class="buy">
@@ -245,31 +214,28 @@
           </div>
 
           <div class="shipping-form" aria-hidden="true">
-            <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
-            <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
-            <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
-            <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
-            <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
+            <div class="field"><label for="s2name">Nombre completo</label><input id="s2name" type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+            <div class="field"><label for="s2loc">Localidad</label><input id="s2loc" type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+            <div class="field"><label for="s2dir">Dirección</label><input id="s2dir" type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+            <div class="field"><label for="s2tel">Teléfono</label><input id="s2tel" type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+            <div class="field"><label for="s2mail">Email</label><input id="s2mail" type="email" class="ship-email" placeholder="tu@correo.com"></div>
             <button type="button" class="save">Guardar</button>
-            <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
+            <div class="shipping-note">Los datos se guardan y se envían con tu pedido.</div>
           </div>
         </div>
       </article>
 
-      <!-- ====== PRODUCTO 3 ====== -->
+      <!-- ====== PRODUCTO 3 (limpio duplicado) ====== -->
       <article class="card product"
         data-title="Remera 3"
         data-price="14999"
         data-sku="REM-003"
         data-gallery="img/remera3-negra.png|img/talleremera3.png">
         <div class="thumb">
-          <img src="img/remera3-negra.png" alt="Remera 3">
-           <!-- Video oculto por defecto -->
-           <video class="thumb-video" controls playsinline preload="metadata"
-           style="max-width:90%;max-height:90%;display:none;"
-           poster="img/remera3-blanco.png">
-      <source src="media/remera3video.mp4" type="video/mp4">
-    </video>
+          <img src="img/remera3-negra.png" alt="Remera 3 color negro" loading="lazy">
+          <video class="thumb-video" controls playsinline preload="metadata" style="display:none;" poster="img/remera3-negra.png">
+            <source src="media/remera3video.mp4" type="video/mp4">
+          </video>
         </div>
         <div class="content">
           <h3 class="title">Remera 3</h3>
@@ -278,32 +244,19 @@
           <div class="row">
             <label>Colores:</label>
             <div class="colors" role="listbox" aria-label="Elegir color">
-                <div class="row">
-                    <label>Colores:</label>
-                    <div class="colors" role="listbox" aria-label="Elegir color">
-                      <!-- Color negro -->
-                      <button class="swatch" title="Negro" data-color="negra"
-                              data-image="img/remera3-negra.png"
-                              style="background:#111111"></button>
-                  
-                      <!-- Botón de VIDEO (SOLO UNO y al final) -->
-                      <button class="swatch is-video" title="Video" data-video="media/remera3video.mp4"
-                              style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">
-                        ▶
-                      </button>
-                    </div>
-                  </div>
-                  
+              <button class="swatch" title="Negro" data-color="negra" data-image="img/remera3-negra.png" style="background:#111111"></button>
+              <button class="swatch is-video" title="Video" data-video="media/remera3video.mp4"
+                      style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
             </div>
           </div>
 
           <div class="row">
             <label>Talle:</label>
-            <select class="size">
+            <select class="size" aria-label="Talle">
               <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
             </select>
             <label>Cant.:</label>
-            <input class="qty" type="number" min="1" value="1" style="width:70px">
+            <input class="qty" type="number" min="1" value="1" style="width:70px" aria-label="Cantidad">
           </div>
 
           <div class="buy">
@@ -312,13 +265,13 @@
           </div>
 
           <div class="shipping-form" aria-hidden="true">
-            <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
-            <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
-            <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
-            <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
-            <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
+            <div class="field"><label for="s3name">Nombre completo</label><input id="s3name" type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+            <div class="field"><label for="s3loc">Localidad</label><input id="s3loc" type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+            <div class="field"><label for="s3dir">Dirección</label><input id="s3dir" type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+            <div class="field"><label for="s3tel">Teléfono</label><input id="s3tel" type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+            <div class="field"><label for="s3mail">Email</label><input id="s3mail" type="email" class="ship-email" placeholder="tu@correo.com"></div>
             <button type="button" class="save">Guardar</button>
-            <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
+            <div class="shipping-note">Los datos se guardan y se envían con tu pedido.</div>
           </div>
         </div>
       </article>
@@ -327,10 +280,10 @@
       <article class="card product"
         data-title="Remera 4"
         data-price="14999"
-        data-sku="REM-002"
+        data-sku="REM-004"
         data-gallery="img/remera4-blanca.png|img/remera4-negra.png|img/talleremera4.png">
         <div class="thumb">
-          <img src="img/remera4-blanca.png" alt="Remera 4">
+          <img src="img/remera4-blanca.png" alt="Remera 4 color blanco" loading="lazy">
         </div>
         <div class="content">
           <h3 class="title">Remera 4</h3>
@@ -339,18 +292,18 @@
           <div class="row">
             <label>Colores:</label>
             <div class="colors" role="listbox" aria-label="Elegir color">
-              <button class="swatch" title="Blanco" data-color="blanco" style="background:#ffffff"></button>
-              <button class="swatch" title="Negra"  data-color="negra"  style="background:#111111"></button>
+              <button class="swatch" title="Blanco" data-color="blanco" data-image="img/remera4-blanca.png" style="background:#ffffff"></button>
+              <button class="swatch" title="Negro"  data-color="negro"  data-image="img/remera4-negra.png"  style="background:#111111"></button>
             </div>
           </div>
 
           <div class="row">
             <label>Talle:</label>
-            <select class="size">
+            <select class="size" aria-label="Talle">
               <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
             </select>
             <label>Cant.:</label>
-            <input class="qty" type="number" min="1" value="1" style="width:70px">
+            <input class="qty" type="number" min="1" value="1" style="width:70px" aria-label="Cantidad">
           </div>
 
           <div class="buy">
@@ -359,286 +312,317 @@
           </div>
 
           <div class="shipping-form" aria-hidden="true">
-            <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
-            <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
-            <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
-            <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
-            <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
+            <div class="field"><label for="s4name">Nombre completo</label><input id="s4name" type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+            <div class="field"><label for="s4loc">Localidad</label><input id="s4loc" type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+            <div class="field"><label for="s4dir">Dirección</label><input id="s4dir" type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+            <div class="field"><label for="s4tel">Teléfono</label><input id="s4tel" type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+            <div class="field"><label for="s4mail">Email</label><input id="s4mail" type="email" class="ship-email" placeholder="tu@correo.com"></div>
             <button type="button" class="save">Guardar</button>
-            <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
+            <div class="shipping-note">Los datos se guardan y se envían con tu pedido.</div>
           </div>
         </div>
       </article>
-<!-- ====== PRODUCTO 5 ====== -->
-<article class="card product"
-  data-title="Remera 5"
-  data-price="14999"
-  data-sku="REM-005"
-  data-gallery="img/remera5-negra.png|img/talleremera5.png">
 
-  <div class="thumb">
-    <img src="img/remera5-negra.png" alt="Remera 5">
+      <!-- ====== PRODUCTO 5 (agrego data-video) ====== -->
+      <article class="card product"
+        data-title="Remera 5"
+        data-price="14999"
+        data-sku="REM-005"
+        data-gallery="img/remera5-negra.png|img/talleremera5.png">
+        <div class="thumb">
+          <img src="img/remera5-negra.png" alt="Remera 5 color negro" loading="lazy">
+          <video class="thumb-video" controls playsinline preload="metadata" style="display:none;" poster="img/talleremera5.png">
+            <source src="media/remera5video.mp4" type="video/mp4">
+          </video>
+        </div>
 
-    <!-- Video oculto por defecto -->
-    <video class="thumb-video" controls playsinline preload="metadata"
-      style="max-width:90%;max-height:90%;display:none;"
-      poster="img/talleremera5.png">
-      <source src="media/remera5video.mp4" type="video/mp4">
-    </video>
-  </div>
+        <div class="content">
+          <h3 class="title">Remera 5</h3>
+          <div class="price">$14.999</div>
 
-  <div class="content">
-    <h3 class="title">Remera 5</h3>
-    <div class="price">$14.999</div>
+          <div class="row">
+            <label>Colores:</label>
+            <div class="colors" role="listbox" aria-label="Elegir color">
+              <button class="swatch" title="Negro" data-color="negra" data-image="img/remera5-negra.png" style="background:#111111"></button>
+              <button class="swatch is-video" title="Video" data-video="media/remera5video.mp4"
+                      style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
+            </div>
+          </div>
 
-    <div class="row">
-      <label>Colores:</label>
-      <div class="colors" role="listbox" aria-label="Elegir color">
-        <!-- Color negro -->
-        <button class="swatch" title="Negro" data-color="negra"
-                data-image="img/remera5-negra.png"
-                style="background:#111111"></button>
+          <div class="row">
+            <label>Talle:</label>
+            <select class="size" aria-label="Talle">
+              <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+            </select>
+            <label>Cant.:</label>
+            <input class="qty" type="number" min="1" value="1" style="width:70px" aria-label="Cantidad">
+          </div>
 
-        <!-- Botón de VIDEO (SOLO UNO y al final) -->
-        <button class="swatch is-video" title="Video"
-                style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">
-          ▶
-        </button>
-      </div>
-    </div>
+          <div class="buy">
+            <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
+            <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar</a>
+          </div>
+        </div>
+      </article>
 
-    <div class="row">
-      <label>Talle:</label>
-      <select class="size">
-        <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
-      </select>
-      <label>Cant.:</label>
-      <input class="qty" type="number" min="1" value="1" style="width:70px">
-    </div>
+      <!-- ====== PRODUCTO 6 (fix imagen) ====== -->
+      <article class="card product"
+        data-title="Remera 6"
+        data-price="14999"
+        data-sku="REM-006"
+        data-gallery="img/remera6-blanco.png|img/remera6-azul.png|img/remera6-talles.png">
+        <div class="thumb">
+          <img src="img/remera6-blanco.png" alt="Remera 6 color blanco" loading="lazy">
+          <video class="thumb-video" controls playsinline preload="metadata" style="display:none;" poster="img/remera6-blanco.png">
+            <source src="media/remera6video.mp4" type="video/mp4">
+          </video>
+        </div>
 
-    <div class="buy">
-      <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
-      <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar</a>
-    </div>
-  </div>
-</article>
+        <div class="content">
+          <h3 class="title">Remera 6</h3>
+          <div class="price">$14.999</div>
 
-<!-- ====== PRODUCTO 6 ====== -->
-<article class="card product"
-  data-title="Remera 6"
-  data-price="14999"
-  data-sku="REM-006"
-  data-gallery="img/remera6-blanco.png|img/remera6-azul.png|img/remera6-talles.png">
-  <div class="thumb">
-    <img src="img/remera5-blanca.png" alt="Remera 5">
-    <video class="thumb-video" controls playsinline preload="metadata"
-           style="max-width:90%;max-height:90%;display:none;"
-           poster="img/remera6-blanco.png">
-      <source src="media/remera6video.mp4" type="video/mp4">
-    </video>
-  </div>
+          <div class="row">
+            <label>Colores:</label>
+            <div class="colors" role="listbox" aria-label="Elegir color">
+              <button class="swatch" title="Blanco" data-color="blanco" data-image="img/remera6-blanco.png" style="background:#ffffff"></button>
+              <button class="swatch" title="Azul"   data-color="azul"   data-image="img/remera6-azul.png"   style="background:#2563eb"></button>
+              <button class="swatch is-video" title="Video" data-video="media/remera6video.mp4"
+                      style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
+            </div>
+          </div>
 
-  <div class="content">
-    <h3 class="title">Remera 6</h3>
-    <div class="price">$14.999</div>
+          <div class="row">
+            <label>Talle:</label>
+            <select class="size" aria-label="Talle">
+              <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+            </select>
+            <label>Cant.:</label>
+            <input class="qty" type="number" min="1" value="1" style="width:70px" aria-label="Cantidad">
+          </div>
 
-    <div class="row">
-      <label>Colores:</label>
-      <div class="colors" role="listbox" aria-label="Elegir color">
-        <button class="swatch" title="Blanco" data-color="blanco"
-                data-image="img/remera6-blanco.png" style="background:#ffffff"></button>
-        <button class="swatch" title="Azul" data-color="azul"
-                data-image="img/remera6-azul.png" style="background:#2563eb"></button>
-        <button class="swatch is-video" title="Video" data-video="media/remera6video.mp4"
-                style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
-      </div>
-    </div>
+          <div class="buy">
+            <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
+            <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar</a>
+          </div>
 
-    <div class="row">
-      <label>Talle:</label>
-      <select class="size">
-        <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
-      </select>
-      <label>Cant.:</label>
-      <input class="qty" type="number" min="1" value="1" style="width:70px">
-    </div>
+          <div class="shipping-form" aria-hidden="true">
+            <div class="field"><label for="s6name">Nombre completo</label><input id="s6name" type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+            <div class="field"><label for="s6loc">Localidad</label><input id="s6loc" type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+            <div class="field"><label for="s6dir">Dirección</label><input id="s6dir" type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+            <div class="field"><label for="s6tel">Teléfono</label><input id="s6tel" type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+            <div class="field"><label for="s6mail">Email</label><input id="s6mail" type="email" class="ship-email" placeholder="tu@correo.com"></div>
+            <button type="button" class="save">Guardar</button>
+            <div class="shipping-note">Los datos se guardan y se envían con tu pedido.</div>
+          </div>
+        </div>
+      </article>
 
-    <div class="buy">
-      <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
-      <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar</a>
-    </div>
+      <!-- ====== PRODUCTO 7 ====== -->
+      <article class="card product"
+        data-title="Remera 7"
+        data-price="14999"
+        data-sku="REM-007"
+        data-gallery="img/remera7-negro.png|img/remera7-rojo.png|img/remera7-talles.png">
+        <div class="thumb">
+          <img src="img/remera7-negro.png" alt="Remera 7 color negro" loading="lazy">
+          <video class="thumb-video" controls playsinline preload="metadata" style="display:none;" poster="img/remera7-negro.png">
+            <source src="media/remera7video.mp4" type="video/mp4">
+          </video>
+        </div>
 
-    <div class="shipping-form" aria-hidden="true">
-      <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
-      <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
-      <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
-      <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
-      <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
-      <button type="button" class="save">Guardar</button>
-      <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
-    </div>
-  </div>
-</article>
+        <div class="content">
+          <h3 class="title">Remera 7</h3>
+          <div class="price">$14.999</div>
 
-<!-- ====== PRODUCTO 7 ====== -->
-<article class="card product"
-  data-title="Remera 7"
-  data-price="14999"
-  data-sku="REM-007"
-  data-gallery="img/remera7-negro.png|img/remera7-rojo.png|img/remera7-talles.png">
-  <div class="thumb">
-    <img src="img/remera7-negro.png" alt="Remera 7">
-    <video class="thumb-video" controls playsinline preload="metadata"
-           style="max-width:90%;max-height:90%;display:none;"
-           poster="img/remera7-negro.png">
-      <source src="media/remera7video.mp4" type="video/mp4">
-    </video>
-  </div>
+          <div class="row">
+            <label>Colores:</label>
+            <div class="colors" role="listbox" aria-label="Elegir color">
+              <button class="swatch" title="Negro" data-color="negro" data-image="img/remera7-negro.png" style="background:#111111"></button>
+              <button class="swatch" title="Rojo"  data-color="rojo"  data-image="img/remera7-rojo.png"  style="background:#dc2626"></button>
+              <button class="swatch is-video" title="Video" data-video="media/remera7video.mp4"
+                      style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
+            </div>
+          </div>
 
-  <div class="content">
-    <h3 class="title">Remera 7</h3>
-    <div class="price">$14.999</div>
+          <div class="row">
+            <label>Talle:</label>
+            <select class="size" aria-label="Talle">
+              <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+            </select>
+            <label>Cant.:</label>
+            <input class="qty" type="number" min="1" value="1" style="width:70px" aria-label="Cantidad">
+          </div>
 
-    <div class="row">
-      <label>Colores:</label>
-      <div class="colors" role="listbox" aria-label="Elegir color">
-        <button class="swatch" title="Negro" data-color="negro"
-                data-image="img/remera7-negro.png" style="background:#111111"></button>
-        <button class="swatch" title="Rojo" data-color="rojo"
-                data-image="img/remera7-rojo.png" style="background:#dc2626"></button>
-        <button class="swatch is-video" title="Video" data-video="media/remera7video.mp4"
-                style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
-      </div>
-    </div>
+          <div class="buy">
+            <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
+            <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar</a>
+          </div>
 
-    <div class="row">
-      <label>Talle:</label>
-      <select class="size">
-        <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
-      </select>
-      <label>Cant.:</label>
-      <input class="qty" type="number" min="1" value="1" style="width:70px">
-    </div>
+          <div class="shipping-form" aria-hidden="true">
+            <div class="field"><label for="s7name">Nombre completo</label><input id="s7name" type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+            <div class="field"><label for="s7loc">Localidad</label><input id="s7loc" type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+            <div class="field"><label for="s7dir">Dirección</label><input id="s7dir" type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+            <div class="field"><label for="s7tel">Teléfono</label><input id="s7tel" type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+            <div class="field"><label for="s7mail">Email</label><input id="s7mail" type="email" class="ship-email" placeholder="tu@correo.com"></div>
+            <button type="button" class="save">Guardar</button>
+            <div class="shipping-note">Los datos se guardan y se envían con tu pedido.</div>
+          </div>
+        </div>
+      </article>
 
-    <div class="buy">
-      <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
-      <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar</a>
-    </div>
+      <!-- ====== PRODUCTO 8 ====== -->
+      <article class="card product"
+        data-title="Remera 8"
+        data-price="14999"
+        data-sku="REM-008"
+        data-gallery="img/remera8-blanco.png|img/remera8-beige.png|img/remera8-talles.png">
+        <div class="thumb">
+          <img src="img/remera8-blanco.png" alt="Remera 8 color blanco" loading="lazy">
+          <video class="thumb-video" controls playsinline preload="metadata" style="display:none;" poster="img/remera8-blanco.png">
+            <source src="media/remera8video.mp4" type="video/mp4">
+          </video>
+        </div>
 
-    <div class="shipping-form" aria-hidden="true">
-      <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
-      <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
-      <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
-      <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
-      <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
-      <button type="button" class="save">Guardar</button>
-      <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
-    </div>
-  </div>
-</article>
+        <div class="content">
+          <h3 class="title">Remera 8</h3>
+          <div class="price">$14.999</div>
 
-<!-- ====== PRODUCTO 8 ====== -->
-<article class="card product"
-  data-title="Remera 8"
-  data-price="14999"
-  data-sku="REM-008"
-  data-gallery="img/remera8-blanco.png|img/remera8-beige.png|img/remera8-talles.png">
-  <div class="thumb">
-    <img src="img/remera8-blanco.png" alt="Remera 8">
-    <video class="thumb-video" controls playsinline preload="metadata"
-           style="max-width:90%;max-height:90%;display:none;"
-           poster="img/remera8-blanco.png">
-      <source src="media/remera8video.mp4" type="video/mp4">
-    </video>
-  </div>
+          <div class="row">
+            <label>Colores:</label>
+            <div class="colors" role="listbox" aria-label="Elegir color">
+              <button class="swatch" title="Blanco" data-color="blanco" data-image="img/remera8-blanco.png" style="background:#ffffff"></button>
+              <button class="swatch" title="Beige"  data-color="beige"  data-image="img/remera8-beige.png"  style="background:#d9c8a6"></button>
+              <button class="swatch is-video" title="Video" data-video="media/remera8video.mp4"
+                      style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
+            </div>
+          </div>
 
-  <div class="content">
-    <h3 class="title">Remera 8</h3>
-    <div class="price">$14.999</div>
+          <div class="row">
+            <label>Talle:</label>
+            <select class="size" aria-label="Talle">
+              <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+            </select>
+            <label>Cant.:</label>
+            <input class="qty" type="number" min="1" value="1" style="width:70px" aria-label="Cantidad">
+          </div>
 
-    <div class="row">
-      <label>Colores:</label>
-      <div class="colors" role="listbox" aria-label="Elegir color">
-        <button class="swatch" title="Blanco" data-color="blanco"
-                data-image="img/remera8-blanco.png" style="background:#ffffff"></button>
-        <button class="swatch" title="Beige" data-color="beige"
-                data-image="img/remera8-beige.png" style="background:#d9c8a6"></button>
-        <button class="swatch is-video" title="Video" data-video="media/remera8video.mp4"
-                style="background:#000;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;">▶</button>
-      </div>
-    </div>
+          <div class="buy">
+            <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
+            <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar</a>
+          </div>
 
-    <div class="row">
-      <label>Talle:</label>
-      <select class="size">
-        <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
-      </select>
-      <label>Cant.:</label>
-      <input class="qty" type="number" min="1" value="1" style="width:70px">
-    </div>
-
-    <div class="buy">
-      <a class="btn envio" href="#" target="_self" rel="noopener">Envío</a>
-      <a class="btn whatsapp" href="#" target="_blank" rel="noopener">Comprar</a>
-    </div>
-
-    <div class="shipping-form" aria-hidden="true">
-      <div class="field"><label>Nombre completo</label><input type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
-      <div class="field"><label>Localidad</label><input type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
-      <div class="field"><label>Dirección</label><input type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
-      <div class="field"><label>Teléfono</label><input type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
-      <div class="field"><label>Email</label><input type="email" class="ship-email" placeholder="tu@correo.com"></div>
-      <button type="button" class="save">Guardar</button>
-      <div class="shipping-note">Los datos guardados se enviarán junto con tu pedido por WhatsApp.</div>
-    </div>
-  </div>
-</article>
+          <div class="shipping-form" aria-hidden="true">
+            <div class="field"><label for="s8name">Nombre completo</label><input id="s8name" type="text" class="ship-name" placeholder="Ej: Juan Pérez"></div>
+            <div class="field"><label for="s8loc">Localidad</label><input id="s8loc" type="text" class="ship-localidad" placeholder="Ej: Lanús, Buenos Aires"></div>
+            <div class="field"><label for="s8dir">Dirección</label><input id="s8dir" type="text" class="ship-direccion" placeholder="Calle y número, depto si aplica"></div>
+            <div class="field"><label for="s8tel">Teléfono</label><input id="s8tel" type="tel" class="ship-telefono" placeholder="11 3565 6576"></div>
+            <div class="field"><label for="s8mail">Email</label><input id="s8mail" type="email" class="ship-email" placeholder="tu@correo.com"></div>
+            <button type="button" class="save">Guardar</button>
+            <div class="shipping-note">Los datos se guardan y se envían con tu pedido.</div>
+          </div>
+        </div>
+      </article>
 
     </section>
   </main>
 
-  <!-- JS principal: swatches (color/video), envío y WhatsApp -->
+  <!-- Botón flotante WhatsApp -->
+  <a class="wa-float" href="https://wa.me/541135656576" target="_blank" rel="noopener" aria-label="WhatsApp flotante">WA</a>
+
+  <!-- Lightbox + Swatches + Envío + WhatsApp -->
   <script>
     const PHONE    = "541135656576";
     const GREETING = "Quiero esta remera";
+    const LS_KEY   = "ey_shipping_v1";
 
-    // 1) Al cargar: seleccionar SIEMPRE el primer color (no video) + ocultar cualquier video
+    // --- Utilidades
+    const absImg = (relPath)=>{
+      const base = location.origin + location.pathname.replace(/[^/]*$/,'');
+      return relPath ? base + relPath : '';
+    };
+    const loadShip = () => {
+      try{ return JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(_) { return {}; }
+    };
+    const saveShip = (obj) => {
+      localStorage.setItem(LS_KEY, JSON.stringify(obj||{}));
+    };
+
+    // --- Lightbox
+    let gallery = [];
+    let currentIndex = 0;
+    const lightbox    = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const caption     = document.getElementById('lightboxCaption');
+    const closeBtn    = document.getElementById('closeLightbox');
+    const prevBtn     = document.getElementById('prevImg');
+    const nextBtn     = document.getElementById('nextImg');
+    function showImage(){
+      if(!gallery.length) return;
+      lightboxImg.src = gallery[currentIndex];
+      caption.textContent = `Imagen ${currentIndex+1} de ${gallery.length}`;
+    }
+    closeBtn.onclick = ()=> lightbox.style.display='none';
+    prevBtn.onclick  = ()=>{ currentIndex = (currentIndex - 1 + gallery.length) % gallery.length; showImage(); };
+    nextBtn.onclick  = ()=>{ currentIndex = (currentIndex + 1) % gallery.length; showImage(); };
+    lightbox.addEventListener('click',(e)=>{ if(e.target===lightbox) lightbox.style.display='none'; });
+    window.addEventListener('keydown', (e)=>{
+      if(lightbox.style.display!=='flex') return;
+      if(e.key==='Escape') lightbox.style.display='none';
+      if(e.key==='ArrowLeft') prevBtn.click();
+      if(e.key==='ArrowRight') nextBtn.click();
+    });
+
+    // --- Al cargar
     window.addEventListener('DOMContentLoaded', ()=>{
+      // Ocultar videos y seleccionar primer color
       document.querySelectorAll('.thumb video.thumb-video').forEach(v=>{
         try{ v.pause(); }catch(_){}
-        v.style.display='none';
-        v.currentTime = 0;
+        v.style.display='none'; v.currentTime = 0; v.setAttribute('tabindex','-1');
       });
 
       document.querySelectorAll('.product').forEach(card=>{
         const firstColor = card.querySelector('.swatch:not(.is-video)');
-        if(!firstColor) return;
-
-        if(!card.querySelector('.swatch[aria-selected="true"]')){
+        if(firstColor && !card.querySelector('.swatch[aria-selected="true"]')){
           firstColor.setAttribute('aria-selected','true');
+          const img = card.querySelector('.thumb img');
+          if(firstColor.dataset.image && img){ img.src = firstColor.dataset.image; }
         }
 
-        const img = card.querySelector('.thumb img');
-        const vid = card.querySelector('.thumb video.thumb-video');
-        if(vid){ try{vid.pause();}catch(_){ } vid.style.display='none'; }
-
-        // Preferir la ruta explícita si existe
-        const direct = firstColor.dataset.image;
-        if(direct && img){
-          img.src = direct;
-          img.style.display = 'block';
-          return;
+        // Precargar datos de envío desde localStorage en cada form
+        const saved = loadShip();
+        if(Object.keys(saved).length){
+          card.querySelector('.ship-name')?.setAttribute('value', saved.name||'');
+          card.querySelector('.ship-localidad')?.setAttribute('value', saved.localidad||'');
+          card.querySelector('.ship-direccion')?.setAttribute('value', saved.direccion||'');
+          card.querySelector('.ship-telefono')?.setAttribute('value', saved.telefono||'');
+          card.querySelector('.ship-email')?.setAttribute('value', saved.email||'');
         }
-
-        // Fallback por color en data-gallery
-        const color   = (firstColor.dataset.color||'').toLowerCase();
-        const gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
-        const match   = color ? gallery.find(p=>p.toLowerCase().includes(color)) : null;
-        if(match && img){ img.src = match; img.style.display='block'; }
       });
+
+      // Mostrar el modal de ayuda 1 sola vez por sesión
+      if(!sessionStorage.getItem('ey_howto_ok')){
+        const modal  = document.getElementById('howto');
+        const closeB = document.getElementById('howto-close');
+        modal.style.display = 'flex';
+        closeB.addEventListener('click', ()=>{ modal.style.display = 'none'; sessionStorage.setItem('ey_howto_ok','1'); });
+      }
     });
 
-    // 2) Click en swatches: si es video -> muestra video; si es color -> cambia imagen
+    // Abrir Lightbox al click en imagen
+    document.addEventListener('click',(e)=>{
+      const img = e.target.closest('.thumb img');
+      if(!img) return;
+      const card = img.closest('.product');
+      if(!card) return;
+      gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean).map(absImg);
+      currentIndex = gallery.findIndex(p=>absImg(img.getAttribute('src')).endsWith(p.split('/').pop()));
+      if(currentIndex < 0) currentIndex = 0;
+      showImage();
+      lightbox.style.display = 'flex';
+    });
+
+    // Click en swatches (color o video)
     document.addEventListener('click', (e)=>{
       const sw = e.target.closest('.swatch');
       if(!sw) return;
@@ -658,8 +642,7 @@
           const btnSrc = sw.dataset.video;
           const source = vid.querySelector('source');
           if(btnSrc && source && !source.src.endsWith(btnSrc)){
-            source.src = btnSrc;
-            vid.load();
+            source.src = btnSrc; vid.load();
           }
           vid.style.display = 'block';
           try{ vid.play(); }catch(_){}
@@ -667,26 +650,12 @@
         return;
       }
 
-      // Es un color: ocultar video y setear imagen
+      // Es color
       if(vid){ try{vid.pause();}catch(_){ } vid.style.display='none'; }
-
-      const nextImg = sw.dataset.image;
-      if(nextImg && img){
-        img.src = nextImg;
-        img.style.display = 'block';
-        return;
-      }
-
-      const color   = (sw.dataset.color||'').toLowerCase();
-      const gallery = (card.dataset.gallery||'').split('|').map(s=>s.trim()).filter(Boolean);
-      const match   = color ? gallery.find(p=>p.toLowerCase().includes(color)) : null;
-      if(match && img){
-        img.src = match;
-        img.style.display = 'block';
-      }
+      if(sw.dataset.image && img){ img.src = sw.dataset.image; img.style.display='block'; }
     });
 
-    // 3) Botón "Envío": mostrar/ocultar formulario
+    // Mostrar/ocultar formulario de envío
     document.addEventListener('click', (e)=>{
       const toggle = e.target.closest('.product .envio');
       if(!toggle) return;
@@ -699,22 +668,33 @@
       form.setAttribute('aria-hidden', visible ? 'true' : 'false');
     });
 
-    // 4) Guardar datos de envío dentro del producto
+    // Guardar datos de envío (en la card y en localStorage)
     document.addEventListener('click', (e)=>{
       const saveBtn = e.target.closest('.product .shipping-form .save');
       if(!saveBtn) return;
       const card = saveBtn.closest('.product');
       const get = sel => card.querySelector(sel)?.value?.trim() || '';
-      card.dataset.shipName      = get('.ship-name');
-      card.dataset.shipLocalidad = get('.ship-localidad');
-      card.dataset.shipDireccion = get('.ship-direccion');
-      card.dataset.shipTelefono  = get('.ship-telefono');
-      card.dataset.shipEmail     = get('.ship-email');
+      const data = {
+        name:      get('.ship-name'),
+        localidad: get('.ship-localidad'),
+        direccion: get('.ship-direccion'),
+        telefono:  get('.ship-telefono'),
+        email:     get('.ship-email')
+      };
+      // en dataset del producto (para el WA inmediato)
+      card.dataset.shipName      = data.name;
+      card.dataset.shipLocalidad = data.localidad;
+      card.dataset.shipDireccion = data.direccion;
+      card.dataset.shipTelefono  = data.telefono;
+      card.dataset.shipEmail     = data.email;
+      // y persistimos global
+      saveShip(data);
+
       saveBtn.textContent = '¡Guardado!';
       setTimeout(()=>{ saveBtn.textContent = 'Guardar'; }, 1200);
     });
 
-    // 5) Enviar por WhatsApp
+    // Comprar por WhatsApp
     document.addEventListener('click', (e)=>{
       const btn = e.target.closest('.product .whatsapp');
       if(!btn) return;
@@ -728,38 +708,44 @@
       const qty   = card.querySelector('.qty')?.value || '1';
       const sel   = card.querySelector('.swatch[aria-selected="true"]');
       const color = sel ? (sel.dataset.color || (sel.classList.contains('is-video') ? 'video' : '')) : '';
-      const img   = card.querySelector('.thumb img')?.getAttribute('src') || '';
+      const currentImg = card.querySelector('.thumb video.thumb-video')?.style.display==='block'
+        ? card.querySelector('.thumb video.thumb-video source')?.src
+        : card.querySelector('.thumb img')?.getAttribute('src');
+      const imgUrl = currentImg ? absImg(currentImg) : '';
 
-      const shipName      = card.dataset.shipName      || '';
-      const shipLocalidad = card.dataset.shipLocalidad || '';
-      const shipDireccion = card.dataset.shipDireccion || '';
-      const shipTelefono  = card.dataset.shipTelefono  || '';
-      const shipEmail     = card.dataset.shipEmail     || '';
+      // datos de envío (dataset o localStorage)
+      const globalShip = loadShip();
+      const shipName      = card.dataset.shipName      || globalShip.name      || '';
+      const shipLocalidad = card.dataset.shipLocalidad || globalShip.localidad || '';
+      const shipDireccion = card.dataset.shipDireccion || globalShip.direccion || '';
+      const shipTelefono  = card.dataset.shipTelefono  || globalShip.telefono  || '';
+      const shipEmail     = card.dataset.shipEmail     || globalShip.email     || '';
 
-      const parts = [
+      const lines = [
         `${GREETING}: ${title}`,
         color ? `Color: ${color}` : null,
         size  ? `Talle: ${size}`  : null,
         qty   ? `Cantidad: ${qty}`: null,
         price ? `Precio publicado: $${Number(price).toLocaleString('es-AR')}` : null,
-        img   ? `Imagen: ${location.origin + location.pathname.replace(/[^/]*$/,'') + img}` : null,
+        imgUrl ? `Imagen: ${imgUrl}` : null,
         (shipName || shipLocalidad || shipDireccion || shipTelefono || shipEmail) ? '— Datos de envío —' : null,
         shipName      ? `Nombre: ${shipName}` : null,
         shipLocalidad ? `Localidad: ${shipLocalidad}` : null,
         shipDireccion ? `Dirección: ${shipDireccion}` : null,
         shipTelefono  ? `Teléfono: ${shipTelefono}` : null,
-        shipEmail     ? `Email: ${shipEmail}` : null,
-      ].filter(Boolean).join('%0A');
+        shipEmail     ? `Email: ${shipEmail}` : null
+      ].filter(Boolean).map(encodeURIComponent).join('%0A');
 
-      const url = `https://wa.me/${PHONE}?text=${parts}`;
+      const url = `https://wa.me/${PHONE}?text=${lines}`;
       try { window.open(url,'_blank'); } catch(_) { location.href = url; }
     });
-  </script>
 
-  <!-- Efecto hover en imágenes (opcional, visual) -->
-  <script>
+    // Efecto hover visual en imágenes
     (function(){
       function enhance(img){
+        if(img.dataset._hoverReady) return;
+        img.dataset._hoverReady = '1';
+        img.loading = 'lazy';
         img.style.cursor = 'pointer';
         img.style.transition = 'transform .2s, filter .2s';
         img.addEventListener('mouseenter', ()=>{
@@ -781,23 +767,16 @@
       }
       document.querySelectorAll('.thumb img').forEach(enhance);
       const obs = new MutationObserver(()=> {
-        document.querySelectorAll('.thumb img').forEach(img => {
-          if (!img.dataset._hoverReady) {
-            enhance(img);
-            img.dataset._hoverReady = '1';
-          }
-        });
+        document.querySelectorAll('.thumb img').forEach(enhance);
       });
       obs.observe(document.body, { childList:true, subtree:true });
     })();
-  </script>
 
-  <!-- Modal "Cómo comprar" -->
-  <script>
+    // Modal "Cómo comprar"
     (function(){
       const modal  = document.getElementById('howto');
       const closeB = document.getElementById('howto-close');
-      window.addEventListener('load', ()=>{ modal.style.display = 'flex'; });
+      window.addEventListener('load', ()=>{ /* ya gestionado arriba con sessionStorage */ });
       closeB.addEventListener('click', ()=>{ modal.style.display = 'none'; });
     })();
   </script>
